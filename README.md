@@ -2,12 +2,11 @@
 
 ## On the Occasion of Mahāśivarātri 
 
-This draft of **Sanskrit Linguistic Binary Codec (SLBC)** is released on 15 February 2026.
+This draft of **Sanskrit Linguistic Binary Codec (SLBC)** is released for preview and comments on 15 February 2026.
 
 > **Kṛṣṇa-pakṣe Caturdaśyāṁ, Uttarāṣāḍhā-nakṣatre, Vyatīpāta-yoge, Viṣṭi-karaṇe, Vikrama-saṁvate 2082, Parābhava-saṁvatsare.**
 
-Traditionally aligned with *Mahāśivarātri* and the remembered *udgama* of the **Māheśvara-sūtrāṇi**, this date symbolically reflects the phonological foundation upon which the Aṣṭādhyāyī — backbone of Pāṇinian grammar — is constructed.
-
+Traditionally aligned with *Mahāśivarātri*, also remembered as *udgama* of the **Māheśvara-sūtrāṇi** - symbolically reflects the phonological foundation upon which the Aṣṭādhyāyī — backbone of Pāṇinian grammar — is constructed.
 
 
 In keeping with the spirit of that tradition, this work begins with salutations to:
@@ -32,7 +31,7 @@ By arranging *varṇas* in a specific sequence and marking boundaries with *anub
 
 The elegance lies not in enumeration, but in **structure**.
 
-The Sanskrit *varṇa*-system is fundamentally grid-like:
+The Sanskrit *varṇa*-system represents different 'varṇa' fundamentally in grid-like structure similar to:
 
 | Place (*sthāna*) | Voiceless | Aspirated | Voiced | Voiced Aspirated | Nasal |
 | ---------------- | --------- | --------- | ------ | ---------------- | ----- |
@@ -137,7 +136,7 @@ It is a structural representation layer.
 
 ---
 
-## Scope of This Draft (v0.6)
+## Scope of This Draft (v0.8)
 
 This initial public draft supports:
 
