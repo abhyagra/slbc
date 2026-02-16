@@ -68,6 +68,8 @@ Implementation requirements:
 
 # 2. Byte-Space Classification
 
+**STATUS: FROZEN (v0.11).** The byte-space classification, all svara/vyañjana encodings (§3, §4), algebraic operations (§5), and bhāṣā/lipi control byte assignments (§6) are stable. No remaining open items affect these sections.
+
 Unchanged from v0.5.
 
 | Class | Condition | Meaning |
@@ -963,6 +965,8 @@ Bootstrap coverage is sufficient for Gītā, Upaniṣad, and epic-level texts. E
 
 # 10. CLI Interface
 
+**MVP scope (Phase 2, in progress):** The commands `encode`, `decode`, `inspect`, `transform`, and `roundtrip` are being implemented for pāṭha mode. The `annotate` command and registry management commands are deferred pending resolution of TBD-2/6 (vyākaraṇa wire formats).
+
 ```bash
 # ── Encode (IAST only) ──
 slbc encode "dharmakṣetre kurukṣetre" --hex
@@ -1040,6 +1044,8 @@ SLBC is a binary encoding of Sanskrit that:
 6. **Offers two clean modes** — pāṭha (readable text) and vyākhyā (analyzed text)
 7. **Treats vyākaraṇa as indivisible** — morphology, kāraka, sandhi, anvaya travel together
 
+**Current status (v0.11):** Bhāṣā and lipi layers frozen. MVP Rust CLI (Phase 2) in progress for pāṭha mode. Vyākaraṇa wire formats (TBD-2, TBD-6) open — scoped to META envelope and registry layer only.
+
 ---
 
 # 12. Open Items (TBD)
@@ -1067,6 +1073,8 @@ Items acknowledged as under-specified in v0.8. Struck-through items have been re
 | 2 | **TBD-6 dependency clarified** — Sandhi rule binary metadata (§9.3.2) is blocked on TBD-2 (vyākaraṇa sub-field wire formats). The sandhi registry entry structure must align with the sandhi history sub-tag (0xFE) wire format; these will be resolved together. | §12 |
 | 3 | **Lipi layer declared complete** — No remaining TBDs affect the lipi control lane (COLUMN=111). All 8 lipi slots are stable. | §6.2 |
 | 4 | **Bhāṣā control lane confirmed frozen** — All 8 bhāṣā control slots (COLUMN=110) unchanged; 0x36 remains reserved. TBD-2 and TBD-6 are scoped entirely within the META envelope and registry layer respectively. | §6.1 |
+| 5 | **Bhāṣā layer frozen** — Byte-space classification (§2), vyañjana encoding (§3), svara encoding (§4), algebraic operations (§5), and all control byte assignments (§6) declared stable. Frozen status advisory added to §2. | §2 |
+| 6 | **Phase 2 (MVP Codec in Rust) initiated** — Pāṭha-mode CLI implementation in progress: `encode`, `decode`, `inspect`, `transform`, `roundtrip`. Vyākaraṇa annotation commands (`annotate`, registry management) deferred pending TBD-2/6. | §10 |
 
 ## A.2 v0.9 Changes (from v0.8-draft)
 
