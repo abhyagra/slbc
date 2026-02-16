@@ -163,7 +163,7 @@ The development of SLBC is organized into the following phases. Each phase build
 
 | Phase | Description | Scope | Status |
 | ----- | ----------- | ----- | ------ |
-| **1** | **Specification** — Define the SLBC binary layout, byte-space classification, svara/vyañjana encoding, control bytes, container format, vyākaraṇa layer, and registries. | `SLBC_v0_8_spec.md` | 📝 Draft |
+| **1** | **Specification** — Define the SLBC binary layout, byte-space classification, svara/vyañjana encoding, control bytes, container format, vyākaraṇa layer, and registries. | 📄 **Full specification:** [SLBC_spec.md](SLBC_spec.md) | 📝 Draft |
 | **2** | **MVP Codec in Rust (CLI)** — Implement the core encoder-decoder in Rust with a CLI interface supporting `encode`, `decode`, `inspect`, `transform`, and `roundtrip` commands as defined in the spec §10. | `slbc` crate + binary | ⏳ Planned |
 | **3** | **Test Automation & Validation** — Build a comprehensive test suite: round-trip correctness, algebraic operation verification (guṇa, vṛddhi, jaśtva, saṃprasāraṇa), container format parsing, edge cases (pluta svaras, Vedic accents, jihvāmūlīya/upadhmānīya). | CI pipeline + test corpus | ⏳ Planned |
 | **4** | **Stream Encoding/Decoding (gRPC, REST)** — Expose the codec as a network service supporting streaming encode/decode over gRPC and REST, enabling integration with external NLP pipelines and annotation services. | `slbc-server` | ⏳ Planned |
