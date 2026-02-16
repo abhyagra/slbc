@@ -1,5 +1,5 @@
 # Sanskrit Linguistic Binary Codec (SLBC)
-## Version: 0.8-draft
+## Version: 0.9-draft
 
 ---
 
@@ -24,11 +24,11 @@ Script conversion (Devanāgarī, Grantha, etc.) is the responsibility of mature 
 ┌─────────────────────────────────────────────────────┐
 │           Vyākaraṇa (vya)                           │
 │  morphology · samāsa · kāraka · sandhi · anvaya     │
-│  [all sub-components travel together — indivisible]  │
+│  [all sub-components travel together — indivisible] │
 ├─────────────────────────────────────────────────────┤
 │           Bhāṣā + Lipi (bha + lipi)                 │
 │  svaras · vyañjanas · controls · spaces · daṇḍas    │
-│  [always present — the minimum viable stream]        │
+│  [always present — the minimum viable stream]       │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -267,7 +267,9 @@ fn samprasarana_to_svara(consonant: u8) -> u8 {
 | 00 100 110 | 0x26 | PADA_START | Word/pada boundary start |
 | 00 101 110 | 0x2E | PADA_END | Word/pada boundary end |
 | 00 110 110 | 0x36 | ANU | Anunāsika modifier |
-| 00 111 110 | 0x3E | — | Reserved |
+| 00 111 110 | 0x3E | SAṄKHYĀ_START | Opens numeral digit-word span (see §6.3) |
+
+**Note:** All bhāṣā control slots are now allocated. Future bhāṣā-layer control needs must use META extension mechanisms or the reserved column (COLUMN=101).
 
 ### 6.2 Lipi Lane (COLUMN = 111)
 
@@ -278,9 +280,203 @@ fn samprasarana_to_svara(consonant: u8) -> u8 {
 | 00 010 111 | 0x17 | DOUBLE_DANDA | Double daṇḍa (॥) |
 | 00 011 111 | 0x1F | SPACE | Visual word separator |
 | 00 100 111 | 0x27 | AVAGRAHA | Avagraha (ऽ) |
-| 00 101 111 | 0x2F | NUM | Numeral prefix (see §12, TBD-1) |
+| 00 101 111 | 0x2F | NUM | Numeral digit-glyph span (see §6.3) |
 | 00 110 111 | 0x37 | META_EXT | Lipi extensions |
 | 00 111 111 | 0x3F | — | Reserved |
+
+### 6.3 Numeral Encoding
+
+#### 6.3.1 Design Principle
+
+Numeric glyphs (१, २, ३, etc.) are a **lipi-layer convention** — visual shorthand that diverges from the spoken form for readability. They are not phonemic entities.
+
+In the bhāṣā layer, every entity must have articulatory form. The bhāṣā layer is primary; lipi is its projection. A numeral that exists only in lipi would be **irrecoverably lost** during bhāṣā-only processing — unlike virāma or daṇḍa, which are reconstructible from pada boundaries.
+
+Therefore, numerals are encoded in **both layers**:
+
+| Layer | Representation | Purpose |
+|---|---|---|
+| **Bhāṣā** | Digit-words in prātipadika form, R→L order | Phonemic preservation, grammatical processability |
+| **Lipi** | Digit glyphs in visual order | Rendering fidelity |
+
+The bhāṣā encoding follows the classical mathematical recitation convention:
+
+> **aṅkānāṃ vāmato gatiḥ** — "digits proceed leftward"
+
+Digits are encoded starting from the units place (rightmost) moving left, each as a **pure prātipadika** (stem form) — no vibhakti, no sandhi.
+
+#### 6.3.2 Bhāṣā Layer: SAṄKHYĀ Span
+
+**Span structure:**
+
+```
+[SAṄKHYĀ_START (0x3E)]
+[digit-count (ULEB128)]            ← number of digit-padas that follow
+[PADA_START] digit-word₁ [PADA_END]
+[PADA_START] digit-word₂ [PADA_END]
+...
+[PADA_START] digit-wordₙ [PADA_END]
+```
+
+**Termination:** The SAṄKHYĀ span contains exactly `digit-count` digit-padas. No SAṄKHYĀ_END byte is needed. After consuming the declared number of digit-padas, the parser resumes normal mode.
+
+**Rationale for explicit count over vocabulary-exhaustion termination:** Four digit-words — pañca (5), sapta (7), aṣṭa (8), nava (9) — are an-stem numerals whose prathamā/dvitīyā napuṃsakaliṅga forms are identical to their prātipadika. These words can appear as regular grammatical padas immediately after a SAṄKHYĀ span. Without an explicit count, the decoder would incorrectly consume them as digits. Additionally, `nava` ("nine") is homophonous with `nava` ("new"), creating a lexical ambiguity that further necessitates explicit span boundaries.
+
+ULEB128 is chosen for the count to maintain consistency with all other variable-length integers in the format (§7.4, §8.4, §9.1).
+
+**Digit-word vocabulary (closed set):**
+
+| Digit | Prātipadika | SLBC bhāṣā bytes |
+|---|---|---|
+| 0 | śūnya | 0x29 0x88 0x1C 0x31 0x40 |
+| 1 | eka | 0x85 0x00 0x40 |
+| 2 | dvi | 0x1A 0x32 0x44 |
+| 3 | tri | 0x18 0x33 0x44 |
+| 4 | catur | 0x08 0x40 0x18 0x48 0x33 |
+| 5 | pañca | 0x20 0x40 0x0C 0x08 0x40 |
+| 6 | ṣaṣ | 0x2A 0x40 0x2A |
+| 7 | sapta | 0x2B 0x40 0x20 0x18 0x40 |
+| 8 | aṣṭa | 0x40 0x2A 0x10 0x40 |
+| 9 | nava | 0x1C 0x40 0x32 0x40 |
+
+These are the **only** valid pada contents within a SAṄKHYĀ span. The set is fixed and closed — implementations MUST validate pada contents against this table.
+
+**Ordering: R→L (units-first).**
+
+Digits are encoded starting from the units place (rightmost digit) and proceeding leftward:
+
+```
+Number:  108
+Digits:  1   0   8
+Order:   3rd 2nd 1st  (R→L: units first)
+
+Bhāṣā:  [SAṄKHYĀ_START] [0x03]
+         [PADA_START] aṣṭa  [PADA_END]    ← 8 (units)
+         [PADA_START] śūnya  [PADA_END]    ← 0 (tens)
+         [PADA_START] eka    [PADA_END]    ← 1 (hundreds)
+```
+
+The decoder reverses the sequence to reconstruct the positional value.
+
+#### 6.3.3 Lipi Layer: NUM Digit-Glyph Span
+
+NUM (0x2F) opens a **digit-glyph span** in the lipi lane. Within the span, bytes 0x00–0x0F are interpreted as glyph tokens:
+
+| Byte | Glyph | Function |
+|---|---|---|
+| 0x00–0x09 | Digits 0–9 | Digit glyphs |
+| 0x0A | — | Digit-group separator (comma, etc.) |
+| 0x0B | — | Fractional mark (apūrṇāṅka / decimal point) |
+| 0x0C | — | Positive sign |
+| 0x0D | — | Negative sign |
+| 0x0E–0x0F | — | Reserved |
+
+**Termination:** The first byte outside 0x00–0x0F exits the digit-glyph span. The parser resumes normal lipi-mode parsing.
+
+**Digit order: L→R (visual).** Lipi digit-glyphs follow **visual order** (left-to-right), matching manuscript fidelity:
+
+```
+Number 108:
+  NUM (0x2F) 0x01 0x00 0x08
+              1    0    8     ← visual L→R order
+```
+
+Leading zeros are preserved (glyph-faithful encoding). `0x2F 0x00` is valid (zero).
+
+#### 6.3.4 Interleaved PHON Chunk: Both Layers Together
+
+In a PHON chunk (interleaved bhāṣā + lipi), both representations appear for the same numeral:
+
+```
+Full stream for "adhyāyaḥ 108 dharma":
+
+[PADA_START]
+  a(0x40) dh(0x1B) y(0x31) ā(0x80) y(0x31) a(0x40) ḥ(0x39)
+[PADA_END]
+
+[SPACE (0x1F)]
+
+[SAṄKHYĀ_START (0x3E)]
+[0x03]                                            ← 3 digit-padas
+
+  [PADA_START]
+    a(0x40) ṣ(0x2A) ṭ(0x10) a(0x40)              ← "aṣṭa" = 8
+  [PADA_END]
+
+  [PADA_START]
+    ś(0x29) ū(0x88) n(0x1C) y(0x31) a(0x40)      ← "śūnya" = 0
+  [PADA_END]
+
+  [PADA_START]
+    e(0x85) k(0x00) a(0x40)                        ← "eka" = 1
+  [PADA_END]
+
+[NUM (0x2F)] [0x01] [0x00] [0x08]                 ← lipi digit glyphs
+
+[SPACE (0x1F)]
+
+[PADA_START]
+  dh(0x1B) a(0x40) r(0x33) m(0x24) a(0x40)       ← "dharma"
+[PADA_END]
+```
+
+#### 6.3.5 Layer Extraction Behavior
+
+| Extraction mode | SAṄKHYĀ span (bhāṣā) | NUM span (lipi) |
+|---|---|---|
+| **Pāṭha** (bha + lipi) | Emitted | Emitted |
+| **Bhāṣā-only** | Emitted (phonemic content preserved) | Stripped |
+| **Vyākhyā** | Emitted; META may annotate with prātipadika class=14 | Emitted |
+
+Bhāṣā-only extraction retains full numeral context. The digit-words are phonemically real, grammatically inert (prātipadika form), and unambiguously bounded (SAṄKHYĀ_START + count).
+
+#### 6.3.6 Decoder Reference
+
+```rust
+/// Decode a SAṄKHYĀ span from the bhāṣā stream.
+/// Returns the reconstructed integer value as a digit vector.
+fn decode_sankhya(stream: &mut ByteStream) -> Vec<u8> {
+    assert_eq!(stream.read_byte(), 0x3E); // SAṄKHYĀ_START
+
+    let digit_count = stream.read_uleb128();
+    let mut digits = Vec::with_capacity(digit_count);
+
+    for _ in 0..digit_count {
+        assert_eq!(stream.read_byte(), 0x26); // PADA_START
+        let pada_bytes = stream.read_until(0x2E); // read to PADA_END
+        let digit = match digit_vocabulary_lookup(&pada_bytes) {
+            Some(d) => d,
+            None => panic!("invalid digit-word inside SAṄKHYĀ span"),
+        };
+        digits.push(digit);
+    }
+
+    digits.reverse(); // vāmato gatiḥ: R→L input → L→R value
+    digits
+}
+
+/// Encode an integer as a SAṄKHYĀ span in the bhāṣā stream.
+fn encode_sankhya(value: &str, stream: &mut ByteStream) {
+    let digit_chars: Vec<char> = value.chars().collect();
+
+    stream.write_byte(0x3E); // SAṄKHYĀ_START
+    stream.write_uleb128(digit_chars.len());
+
+    // Emit digits R→L (units first)
+    for ch in digit_chars.iter().rev() {
+        let digit = ch.to_digit(10).expect("non-digit character");
+        stream.write_byte(0x26); // PADA_START
+        stream.write_bytes(digit_to_pratipadika(digit));
+        stream.write_byte(0x2E); // PADA_END
+    }
+}
+```
+
+#### 6.3.7 Open Considerations
+
+**Fractional / decimal numbers:** The lipi layer supports fractional marks (0x0B) and signs (0x0C, 0x0D) within a NUM span. The bhāṣā-layer representation of fractions and negative numbers is **not yet specified**. This may require extending the SAṄKHYĀ span grammar or introducing additional marker bytes. Deferred to future revision.
+
+**Ordinal and compound numerals:** When a number appears as part of a literary samāsa (e.g., "aṣṭottaraśatam" written by the author in IAST), it enters the bhāṣā layer as normal phonemes with no SAṄKHYĀ markers. The SAṄKHYĀ mechanism applies **only** when the encoder translates digit glyphs from the input.
 
 ---
 
@@ -351,7 +547,7 @@ Each chunk in the container has the following structure:
 ```
 ┌──────────┬────────────────────┬───────────────────┐
 │ Type     │ Payload Length     │ Payload           │
-│ (1 byte) │ (ULEB128-32)      │ (variable)        │
+│ (1 byte) │ (ULEB128-32)       │ (variable)        │
 └──────────┴────────────────────┴───────────────────┘
 ```
 
@@ -394,11 +590,27 @@ slbc extract --mode patha:
     if is_svara(b) or is_vyanjana(b) → emit
     if is_bhasha_control(b):
       if b == META_START → skip until matching META_END
+      if b == SANKHYA_START → emit (enter SAṄKHYĀ span; emit count + digit-padas)
       else → emit (PADA_START, PADA_END, PHON markers)
-    if is_lipi_control(b) → emit
+    if is_lipi_control(b):
+      if b == NUM → emit (enter digit-glyph span; emit glyph bytes)
+      else → emit
   For chunks:
     PHON, BHA, LIPI → include
     META, DICT, ANVY → exclude
+
+slbc extract --mode bhasha-only:
+  For each byte:
+    if is_svara(b) or is_vyanjana(b) → emit
+    if is_bhasha_control(b):
+      if b == META_START → skip until matching META_END
+      if b == SANKHYA_START → emit (SAṄKHYĀ span carries phonemic content)
+      else → emit (PADA_START, PADA_END, PHON markers)
+    if is_lipi_control(b) → strip (including NUM spans)
+  For chunks:
+    BHA → include
+    LIPI → exclude
+    PHON → emit bhāṣā bytes only
 
 slbc extract --mode vyakhya:
   Emit everything.
@@ -832,11 +1044,11 @@ SLBC v0.8 is a binary encoding of Sanskrit that:
 
 # 12. Open Items (TBD)
 
-Items acknowledged as under-specified in v0.8. These will be resolved in subsequent revisions.
+Items acknowledged as under-specified in v0.8. Struck-through items have been resolved in subsequent revisions.
 
 | ID | Section | Item | Notes |
 |---|---|---|---|
-| TBD-1 | §6.2 | **Numeral encoding format** — The `NUM` prefix byte (0x2F) is defined, but the format of the byte(s) that follow it is unspecified. Options under consideration: (a) fixed single byte mapping Sanskrit numerals 0–9; (b) ULEB128 for arbitrary integers; (c) sequence of digit bytes. | Deferred to v0.9. |
+| ~~TBD-1~~ | ~~§6.2~~ | ~~**Numeral encoding format**~~ | **Resolved in v0.9** — see §6.3. Dual-layer design: bhāṣā layer uses SAṄKHYĀ_START (0x3E) + ULEB128 digit count + R→L prātipadika digit-words (*aṅkānāṃ vāmato gatiḥ*); lipi layer uses NUM (0x2F) + L→R digit-glyph span. |
 | TBD-2 | §8 | **Vyākaraṇa sub-field wire formats** — Detailed byte layouts for subanta fields (vibhakti/vacana/liṅga packing), tiṅanta fields (lakāra/puruṣa/vacana/pada/prayoga/gaṇa packing), kāraka sub-tag internals, and sandhi history sub-tag internals. Envelope structure is defined; field-level encoding is not. | Deferred to v0.9. |
 | ~~TBD-3~~ | ~~§9.2~~ | ~~**DICT chunk internal format**~~ | **Resolved in v0.8** — see §9.6. |
 | TBD-4 | §6.1 | **ANU (anunāsika modifier) interaction with anusvāra** — `ANU` (0x36, bhāṣā control) is the chandrabindu/anunāsika modifier; `ṃ` (0x3A, glottal group) is the anusvāra. Their distinct roles and sequencing rules (e.g., does ANU precede or follow the svara it modifies?) need formal specification. | Deferred to v0.9. |
@@ -847,7 +1059,16 @@ Items acknowledged as under-specified in v0.8. These will be resolved in subsequ
 
 # Appendix A. Changelog
 
-## A.1 v0.8 Changes (from v0.7-draft)
+## A.1 v0.9 Changes (from v0.8-draft)
+
+| # | Change | Sections affected |
+|---|---|---|
+| 1 | **TBD-1 resolved: Numeral encoding** — Dual-layer design. Bhāṣā layer uses SAṄKHYĀ_START (0x3E) + ULEB128 digit count + R→L prātipadika digit-words (*aṅkānāṃ vāmato gatiḥ* convention). Lipi layer uses NUM (0x2F) + L→R digit-glyph span with auxiliary symbols (separator, fractional mark, signs). Explicit count prevents ambiguity with an-stem numerals (pañca, sapta, aṣṭa, nava) whose inflected forms are identical to their prātipadika. | §6.1, §6.3 (new), §7.5 |
+| 2 | **SAṄKHYĀ_START (0x3E) assigned** — Previously reserved bhāṣā control slot allocated for numeral digit-word spans. All 8 bhāṣā control slots now occupied. | §6.1 |
+| 3 | **NUM (0x2F) digit-glyph span specified** — Lipi-layer numeral rendering: 10 digit glyphs (0x00–0x09) plus auxiliary symbols (separator, fractional mark, positive/negative signs). Implicit termination on first byte ≥ 0x10. | §6.3.3 |
+| 4 | **Extraction logic expanded** — Added bhāṣā-only extraction mode. SAṄKHYĀ spans preserved in bhāṣā extraction (phonemic content). NUM spans stripped in bhāṣā extraction (lipi-only). | §7.5 |
+
+## A.2 v0.8 Changes (from v0.7-draft)
 
 | # | Change | Sections affected |
 |---|---|---|
@@ -860,7 +1081,7 @@ Items acknowledged as under-specified in v0.8. These will be resolved in subsequ
 | 7 | **Registry extension switch table** — `--sldr`, `--slpr`, `--slsr` with merge semantics and provenance recording. | §10.1 (new) |
 | 8 | **TBD-6 added** — Sandhi rule binary metadata needs structured applicability fields for automated sandhi. | §12 |
 
-## A.2 v0.7 Changes (from v0.6-draft)
+## A.3 v0.7 Changes (from v0.6-draft)
 
 | # | Change | Sections affected |
 |---|---|---|
