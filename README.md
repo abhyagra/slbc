@@ -136,7 +136,7 @@ It is a structural representation layer.
 
 ---
 
-## Scope of This Draft (v0.9)
+## Scope of This Draft (v0.10)
 
 This initial public draft supports:
 

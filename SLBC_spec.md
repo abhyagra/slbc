@@ -1,5 +1,5 @@
 # Sanskrit Linguistic Binary Codec (SLBC)
-## Version: 0.9-draft
+## Version: 0.10-draft
 
 ---
 
@@ -266,10 +266,10 @@ fn samprasarana_to_svara(consonant: u8) -> u8 {
 | 00 011 110 | 0x1E | PHON_END | Phonological boundary end |
 | 00 100 110 | 0x26 | PADA_START | Word/pada boundary start |
 | 00 101 110 | 0x2E | PADA_END | Word/pada boundary end |
-| 00 110 110 | 0x36 | ANU | Anunāsika modifier |
+| 00 110 110 | 0x36 | — | Reserved |
 | 00 111 110 | 0x3E | SAṄKHYĀ_START | Opens numeral digit-word span (see §6.3) |
 
-**Note:** All bhāṣā control slots are now allocated. Future bhāṣā-layer control needs must use META extension mechanisms or the reserved column (COLUMN=101).
+**Note:** Seven of eight bhāṣā control slots are occupied; one (0x36) is reserved. Future bhāṣā-layer control needs may use this slot, META extension mechanisms, or the reserved column (COLUMN=101).
 
 ### 6.2 Lipi Lane (COLUMN = 111)
 
@@ -1030,7 +1030,7 @@ When extensions are used, the output `.slbc` container records the extension pro
 
 # 11. Summary
 
-SLBC v0.8 is a binary encoding of Sanskrit that:
+SLBC is a binary encoding of Sanskrit that:
 
 1. **Encodes from IAST** — phonemically unambiguous input, no script ambiguity
 2. **Decodes to IAST or Devanāgarī** — with script conversion via external tools for other scripts
@@ -1051,7 +1051,7 @@ Items acknowledged as under-specified in v0.8. Struck-through items have been re
 | ~~TBD-1~~ | ~~§6.2~~ | ~~**Numeral encoding format**~~ | **Resolved in v0.9** — see §6.3. Dual-layer design: bhāṣā layer uses SAṄKHYĀ_START (0x3E) + ULEB128 digit count + R→L prātipadika digit-words (*aṅkānāṃ vāmato gatiḥ*); lipi layer uses NUM (0x2F) + L→R digit-glyph span. |
 | TBD-2 | §8 | **Vyākaraṇa sub-field wire formats** — Detailed byte layouts for subanta fields (vibhakti/vacana/liṅga packing), tiṅanta fields (lakāra/puruṣa/vacana/pada/prayoga/gaṇa packing), kāraka sub-tag internals, and sandhi history sub-tag internals. Envelope structure is defined; field-level encoding is not. | Deferred to v0.9. |
 | ~~TBD-3~~ | ~~§9.2~~ | ~~**DICT chunk internal format**~~ | **Resolved in v0.8** — see §9.6. |
-| TBD-4 | §6.1 | **ANU (anunāsika modifier) interaction with anusvāra** — `ANU` (0x36, bhāṣā control) is the chandrabindu/anunāsika modifier; `ṃ` (0x3A, glottal group) is the anusvāra. Their distinct roles and sequencing rules (e.g., does ANU precede or follow the svara it modifies?) need formal specification. | Deferred to v0.9. |
+| ~~TBD-4~~ | ~~§6.1~~ | ~~**ANU (anunāsika modifier) interaction with anusvāra**~~ | **Resolved in v0.9** — ANU (0x36) deallocated; slot reverted to reserved. The Sanskrit nasal system is fully covered by ṃ (0x3A, anusvāra — place-unresolved nasal segment) and COL=100 varga nasals (ṅ, ñ, ṇ, n, m — place-resolved anunāsika). These are mutually exclusive; parasavarṇa (8.4.58) is the mechanical transform between them. Chandrabindu is a lipi-layer rendering choice, not a bhāṣā distinction. Yama consonants are articulatory subtleties of Vedic recitation without bhāṣā-layer relevance. |
 | TBD-5 | — | **OṂkāra (ॐ) encoding** — Whether ॐ receives a dedicated byte or is encoded analytically as `o` + `ṃ` (0x89 0x3A). Liturgical and typographic considerations apply. | Deferred to v0.9. |
 | TBD-6 | §9.3.2 | **Sandhi rule binary metadata** — The sandhi rule binary entry format (§9.3.2) specifies a type nibble and sūtra reference string, but does not define structured fields for rule applicability (e.g., left-context class, right-context class, transformation). This is needed for automated sandhi application. | Deferred to v0.9. |
 
@@ -1067,6 +1067,7 @@ Items acknowledged as under-specified in v0.8. Struck-through items have been re
 | 2 | **SAṄKHYĀ_START (0x3E) assigned** — Previously reserved bhāṣā control slot allocated for numeral digit-word spans. All 8 bhāṣā control slots now occupied. | §6.1 |
 | 3 | **NUM (0x2F) digit-glyph span specified** — Lipi-layer numeral rendering: 10 digit glyphs (0x00–0x09) plus auxiliary symbols (separator, fractional mark, positive/negative signs). Implicit termination on first byte ≥ 0x10. | §6.3.3 |
 | 4 | **Extraction logic expanded** — Added bhāṣā-only extraction mode. SAṄKHYĀ spans preserved in bhāṣā extraction (phonemic content). NUM spans stripped in bhāṣā extraction (lipi-only). | §7.5 |
+| 5 | **TBD-4 resolved: ANU deallocated** — ANU (0x36) reverted to reserved. The nasal system is fully covered by anusvāra (ṃ, 0x3A) and COL=100 varga nasals, which are mutually exclusive via parasavarṇa (8.4.58). Chandrabindu is a lipi-layer rendering choice; yama consonants lack bhāṣā-layer distinction. One bhāṣā control slot freed. | §6.1 |
 
 ## A.2 v0.8 Changes (from v0.7-draft)
 
