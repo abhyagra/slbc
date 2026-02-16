@@ -1,5 +1,5 @@
 # Sanskrit Linguistic Binary Codec (SLBC)
-## Version: 0.10-draft
+## Version: 0.11-draft
 
 ---
 
@@ -1044,22 +1044,31 @@ SLBC is a binary encoding of Sanskrit that:
 
 # 12. Open Items (TBD)
 
-Items acknowledged as under-specified in v0.8. Struck-through items have been resolved in subsequent revisions.
+Items acknowledged as under-specified in v0.8. Struck-through items have been resolved in subsequent revisions. Remaining open items (TBD-2, TBD-6) are scoped to the META envelope and registry layer — no bhāṣā or lipi lane impact.
 
 | ID | Section | Item | Notes |
 |---|---|---|---|
 | ~~TBD-1~~ | ~~§6.2~~ | ~~**Numeral encoding format**~~ | **Resolved in v0.9** — see §6.3. Dual-layer design: bhāṣā layer uses SAṄKHYĀ_START (0x3E) + ULEB128 digit count + R→L prātipadika digit-words (*aṅkānāṃ vāmato gatiḥ*); lipi layer uses NUM (0x2F) + L→R digit-glyph span. |
-| TBD-2 | §8 | **Vyākaraṇa sub-field wire formats** — Detailed byte layouts for subanta fields (vibhakti/vacana/liṅga packing), tiṅanta fields (lakāra/puruṣa/vacana/pada/prayoga/gaṇa packing), kāraka sub-tag internals, and sandhi history sub-tag internals. Envelope structure is defined; field-level encoding is not. | Deferred to v0.9. |
+| TBD-2 | §8 | **Vyākaraṇa sub-field wire formats** — Detailed byte layouts for subanta fields (vibhakti/vacana/liṅga packing), tiṅanta fields (lakāra/puruṣa/vacana/pada/prayoga/gaṇa packing), kāraka sub-tag internals, and sandhi history sub-tag internals. Envelope structure is defined; field-level encoding is not. | Open. Key design questions identified: sandhi history pada-attachment semantics (left vs. right pada), samāsa nested-children model, kāraka governor referencing (pada index vs. byte offset). To be resolved together with TBD-6. |
 | ~~TBD-3~~ | ~~§9.2~~ | ~~**DICT chunk internal format**~~ | **Resolved in v0.8** — see §9.6. |
 | ~~TBD-4~~ | ~~§6.1~~ | ~~**ANU (anunāsika modifier) interaction with anusvāra**~~ | **Resolved in v0.9** — ANU (0x36) deallocated; slot reverted to reserved. The Sanskrit nasal system is fully covered by ṃ (0x3A, anusvāra — place-unresolved nasal segment) and COL=100 varga nasals (ṅ, ñ, ṇ, n, m — place-resolved anunāsika). These are mutually exclusive; parasavarṇa (8.4.58) is the mechanical transform between them. Chandrabindu is a lipi-layer rendering choice, not a bhāṣā distinction. Yama consonants are articulatory subtleties of Vedic recitation without bhāṣā-layer relevance. |
-| TBD-5 | — | **OṂkāra (ॐ) encoding** — Whether ॐ receives a dedicated byte or is encoded analytically as `o` + `ṃ` (0x89 0x3A). Liturgical and typographic considerations apply. | Deferred to v0.9. |
-| TBD-6 | §9.3.2 | **Sandhi rule binary metadata** — The sandhi rule binary entry format (§9.3.2) specifies a type nibble and sūtra reference string, but does not define structured fields for rule applicability (e.g., left-context class, right-context class, transformation). This is needed for automated sandhi application. | Deferred to v0.9. |
+| ~~TBD-5~~ | ~~—~~ | ~~**OṂkāra (ॐ) encoding**~~ | **Resolved in v0.10** — analytical encoding: `o` (0x89) + `ṃ` (0x3A). In Pāṇinian grammar, OṂkāra is not a special phoneme — it is praṇava composed of regular varṇas. No dedicated byte; the bhāṣā layer remains purely phonemic. Script-specific ॐ ligature rendering (ॐ in Devanāgarī, 🕉 as symbol) is a lipi-layer/decoder concern, not a bhāṣā distinction. |
+| TBD-6 | §9.3.2 | **Sandhi rule binary metadata** — The sandhi rule binary entry format (§9.3.2) specifies a type nibble and sūtra reference string, but does not define structured fields for rule applicability (e.g., left-context class, right-context class, transformation). This is needed for automated sandhi application. | Deferred to v0.10. Blocked on TBD-2 — the registry entry format must align with the sandhi history sub-tag (0xFE) wire format. These two items will be resolved together. |
 
 ---
 
 # Appendix A. Changelog
 
-## A.1 v0.9 Changes (from v0.8-draft)
+## A.1 v0.10 Changes (from v0.9-draft)
+
+| # | Change | Sections affected |
+|---|---|---|
+| 1 | **TBD-5 resolved: OṂkāra encoding** — Analytical encoding adopted: `o` (0x89) + `ṃ` (0x3A). OṂkāra is praṇava composed of regular varṇas in Pāṇinian grammar, not a special phoneme. No dedicated byte allocated. Script-specific ligature rendering (ॐ, 🕉) is a lipi-layer/decoder concern. | §12 |
+| 2 | **TBD-6 dependency clarified** — Sandhi rule binary metadata (§9.3.2) is blocked on TBD-2 (vyākaraṇa sub-field wire formats). The sandhi registry entry structure must align with the sandhi history sub-tag (0xFE) wire format; these will be resolved together. | §12 |
+| 3 | **Lipi layer declared complete** — No remaining TBDs affect the lipi control lane (COLUMN=111). All 8 lipi slots are stable. | §6.2 |
+| 4 | **Bhāṣā control lane confirmed frozen** — All 8 bhāṣā control slots (COLUMN=110) unchanged; 0x36 remains reserved. TBD-2 and TBD-6 are scoped entirely within the META envelope and registry layer respectively. | §6.1 |
+
+## A.2 v0.9 Changes (from v0.8-draft)
 
 | # | Change | Sections affected |
 |---|---|---|
@@ -1069,7 +1078,7 @@ Items acknowledged as under-specified in v0.8. Struck-through items have been re
 | 4 | **Extraction logic expanded** — Added bhāṣā-only extraction mode. SAṄKHYĀ spans preserved in bhāṣā extraction (phonemic content). NUM spans stripped in bhāṣā extraction (lipi-only). | §7.5 |
 | 5 | **TBD-4 resolved: ANU deallocated** — ANU (0x36) reverted to reserved. The nasal system is fully covered by anusvāra (ṃ, 0x3A) and COL=100 varga nasals, which are mutually exclusive via parasavarṇa (8.4.58). Chandrabindu is a lipi-layer rendering choice; yama consonants lack bhāṣā-layer distinction. One bhāṣā control slot freed. | §6.1 |
 
-## A.2 v0.8 Changes (from v0.7-draft)
+## A.3 v0.8 Changes (from v0.7-draft)
 
 | # | Change | Sections affected |
 |---|---|---|
@@ -1082,7 +1091,7 @@ Items acknowledged as under-specified in v0.8. Struck-through items have been re
 | 7 | **Registry extension switch table** — `--sldr`, `--slpr`, `--slsr` with merge semantics and provenance recording. | §10.1 (new) |
 | 8 | **TBD-6 added** — Sandhi rule binary metadata needs structured applicability fields for automated sandhi. | §12 |
 
-## A.3 v0.7 Changes (from v0.6-draft)
+## A.4 v0.7 Changes (from v0.6-draft)
 
 | # | Change | Sections affected |
 |---|---|---|

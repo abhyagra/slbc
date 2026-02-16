@@ -136,7 +136,7 @@ It is a structural representation layer.
 
 ---
 
-## Scope of This Draft (v0.10)
+## Scope of This Draft (v0.11)
 
 This initial public draft supports:
 
@@ -170,7 +170,7 @@ The development of SLBC is organized into the following phases. Each phase build
 | **5** | **WASM-WASI Support** — Compile the codec to WebAssembly (WASM + WASI) for browser-based and sandboxed environments, enabling client-side encoding/decoding without native installation. | `slbc.wasm` | ⏳ Planned |
 | **6** | **Community & Extensions** — Incorporate feature requests, expand registry coverage (dhātu, prātipadika, sandhi-rule registries), explore ML-assisted vyākaraṇa annotation, and broaden transliteration input support. | Ongoing | ⏳ Planned |
 
-> **Current milestone:** Phase 1 — Specification (Draft, v0.8)
+> **Current milestone:** Phase 1 — Specification (Draft, v0.11)
 
 ---
 
