@@ -44,7 +44,7 @@ pub fn vrddhi(b: u8) -> Result<TransformResult, String> {
     if s == 0b00 {
         // a → ā (vṛddhi of a is ā in the a-series)
         let accent = svara_a(b);
-        let result = (0b10 << 6) | (accent << 4) | (0b00 << 2) | 0b10;
+        let result = (0b10 << 6) | (accent << 4) | 0b10; // Q=10, A=accent, S=00(a), G=10(vṛddhi)
         return Ok(make_svara_result(b, result, "vṛddhi"));
     }
     let accent = svara_a(b);
@@ -81,12 +81,16 @@ pub fn savarna_dirgha(a: u8, b: u8) -> Result<TransformResult, String> {
     // Result: dīrgha of the series, preserving accent of first
     let accent = svara_a(a);
     let s = svara_s(a);
-    let result = (0b10 << 6) | (accent << 4) | (s << 2) | 0b00;
+    let result = (0b10 << 6) | (accent << 4) | (s << 2); // Q=10(dīrgha), A=accent, S=series, G=00(śuddha)
     Ok(TransformResult {
         input_byte: a,
         output_byte: result,
         operation: "savarṇa-dīrgha",
-        input_iast: format!("{} + {}", crate::decoder::byte_to_iast(a), crate::decoder::byte_to_iast(b)),
+        input_iast: format!(
+            "{} + {}",
+            crate::decoder::byte_to_iast(a),
+            crate::decoder::byte_to_iast(b)
+        ),
         output_iast: crate::decoder::byte_to_iast(result).to_string(),
     })
 }

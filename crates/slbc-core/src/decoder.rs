@@ -3,8 +3,8 @@
 //! Walks a PHON chunk payload byte-by-byte, emitting text.
 //! Devanāgarī output follows §4.2 explicit vowel convention.
 
-use crate::types::*;
 use crate::numeral;
+use crate::types::*;
 
 /// Output script target.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -186,7 +186,7 @@ fn decode_to_devanagari(data: &[u8]) -> Result<String, String> {
             match b {
                 SPACE => out.push(' '),
                 DANDA => out.push('।'),
-                DOUBLE_DANDA => out.push_str("॥"),
+                DOUBLE_DANDA => out.push('॥'),
                 AVAGRAHA => out.push('ऽ'),
                 NUM => {
                     i += 1;
@@ -293,14 +293,43 @@ fn svara_to_iast(b: u8) -> &'static str {
 
 fn vyanjana_to_iast(b: u8) -> &'static str {
     match b {
-        0x00 => "k",  0x01 => "kh", 0x02 => "g",  0x03 => "gh", 0x04 => "ṅ",
-        0x08 => "c",  0x09 => "ch", 0x0A => "j",  0x0B => "jh", 0x0C => "ñ",
-        0x10 => "ṭ",  0x11 => "ṭh", 0x12 => "ḍ",  0x13 => "ḍh", 0x14 => "ṇ",
-        0x18 => "t",  0x19 => "th", 0x1A => "d",  0x1B => "dh", 0x1C => "n",
-        0x20 => "p",  0x21 => "ph", 0x22 => "b",  0x23 => "bh", 0x24 => "m",
-        0x29 => "ś",  0x2A => "ṣ",  0x2B => "s",
-        0x31 => "y",  0x32 => "v",  0x33 => "r",  0x34 => "l",
-        0x38 => "h",  0x39 => "ḥ",  0x3A => "ṃ",  0x3B => "ẖ",  0x3C => "ḫ",
+        0x00 => "k",
+        0x01 => "kh",
+        0x02 => "g",
+        0x03 => "gh",
+        0x04 => "ṅ",
+        0x08 => "c",
+        0x09 => "ch",
+        0x0A => "j",
+        0x0B => "jh",
+        0x0C => "ñ",
+        0x10 => "ṭ",
+        0x11 => "ṭh",
+        0x12 => "ḍ",
+        0x13 => "ḍh",
+        0x14 => "ṇ",
+        0x18 => "t",
+        0x19 => "th",
+        0x1A => "d",
+        0x1B => "dh",
+        0x1C => "n",
+        0x20 => "p",
+        0x21 => "ph",
+        0x22 => "b",
+        0x23 => "bh",
+        0x24 => "m",
+        0x29 => "ś",
+        0x2A => "ṣ",
+        0x2B => "s",
+        0x31 => "y",
+        0x32 => "v",
+        0x33 => "r",
+        0x34 => "l",
+        0x38 => "h",
+        0x39 => "ḥ",
+        0x3A => "ṃ",
+        0x3B => "ẖ",
+        0x3C => "ḫ",
         _ => "?",
     }
 }
@@ -309,19 +338,42 @@ fn vyanjana_to_iast(b: u8) -> &'static str {
 //  Devanāgarī tables
 // ═══════════════════════════════════════════════
 
-const DEVANAGARI_DIGITS: [char; 10] = [
-    '०', '१', '२', '३', '४', '५', '६', '७', '८', '९',
-];
+const DEVANAGARI_DIGITS: [char; 10] = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 
 fn byte_to_devanagari_consonant(b: u8) -> &'static str {
     match b {
-        0x00 => "क",  0x01 => "ख",  0x02 => "ग",  0x03 => "घ",  0x04 => "ङ",
-        0x08 => "च",  0x09 => "छ",  0x0A => "ज",  0x0B => "झ",  0x0C => "ञ",
-        0x10 => "ट",  0x11 => "ठ",  0x12 => "ड",  0x13 => "ढ",  0x14 => "ण",
-        0x18 => "त",  0x19 => "थ",  0x1A => "द",  0x1B => "ध",  0x1C => "न",
-        0x20 => "प",  0x21 => "फ",  0x22 => "ब",  0x23 => "भ",  0x24 => "म",
-        0x29 => "श",  0x2A => "ष",  0x2B => "स",
-        0x31 => "य",  0x32 => "व",  0x33 => "र",  0x34 => "ल",
+        0x00 => "क",
+        0x01 => "ख",
+        0x02 => "ग",
+        0x03 => "घ",
+        0x04 => "ङ",
+        0x08 => "च",
+        0x09 => "छ",
+        0x0A => "ज",
+        0x0B => "झ",
+        0x0C => "ञ",
+        0x10 => "ट",
+        0x11 => "ठ",
+        0x12 => "ड",
+        0x13 => "ढ",
+        0x14 => "ण",
+        0x18 => "त",
+        0x19 => "थ",
+        0x1A => "द",
+        0x1B => "ध",
+        0x1C => "न",
+        0x20 => "प",
+        0x21 => "फ",
+        0x22 => "ब",
+        0x23 => "भ",
+        0x24 => "म",
+        0x29 => "श",
+        0x2A => "ष",
+        0x2B => "स",
+        0x31 => "य",
+        0x32 => "व",
+        0x33 => "र",
+        0x34 => "ल",
         0x38 => "ह",
         _ => "?",
     }
@@ -330,13 +382,20 @@ fn byte_to_devanagari_consonant(b: u8) -> &'static str {
 fn byte_to_devanagari_independent(b: u8) -> &'static str {
     let base = b & 0b11_00_11_11;
     match base {
-        0x40 => "अ",  0x80 => "आ",
-        0x44 => "इ",  0x84 => "ई",
-        0x48 => "उ",  0x88 => "ऊ",
-        0x4C => "ऋ",  0x8C => "ॠ",
-        0x4F => "ऌ",  0x8F => "ॡ",
-        0x85 => "ए",  0x86 => "ऐ",
-        0x89 => "ओ",  0x8A => "औ",
+        0x40 => "अ",
+        0x80 => "आ",
+        0x44 => "इ",
+        0x84 => "ई",
+        0x48 => "उ",
+        0x88 => "ऊ",
+        0x4C => "ऋ",
+        0x8C => "ॠ",
+        0x4F => "ऌ",
+        0x8F => "ॡ",
+        0x85 => "ए",
+        0x86 => "ऐ",
+        0x89 => "ओ",
+        0x8A => "औ",
         _ => "?",
     }
 }
@@ -371,7 +430,7 @@ fn is_postfix_mark(b: u8) -> bool {
 /// Devanāgarī rendering of visarga/anusvāra (appended after vowel).
 fn postfix_mark_devanagari(b: u8) -> &'static str {
     match b {
-        0x39 => "ः",  // visarga
+        0x39 => "ः", // visarga
         0x3A => "ं",  // anusvāra
         _ => "",
     }

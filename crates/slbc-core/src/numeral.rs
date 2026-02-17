@@ -3,8 +3,8 @@
 //! Bhāṣā layer: SAṄKHYĀ_START + ULEB128 count + R→L digit-word padas.
 //! Lipi layer: NUM + L→R digit glyphs.
 
-use crate::types::*;
 use crate::container;
+use crate::types::*;
 
 /// The closed digit-word vocabulary (§6.3.2).
 /// Each entry is the SLBC bhāṣā encoding of the prātipadika.
@@ -126,8 +126,7 @@ fn lookup_digit_word(pada_bytes: &[u8]) -> Option<u8> {
 
 /// IAST names for digits (for inspection / decode display).
 pub const DIGIT_IAST: [&str; 10] = [
-    "śūnya", "eka", "dvi", "tri", "catur",
-    "pañca", "ṣaṣ", "sapta", "aṣṭa", "nava",
+    "śūnya", "eka", "dvi", "tri", "catur", "pañca", "ṣaṣ", "sapta", "aṣṭa", "nava",
 ];
 
 #[cfg(test)]

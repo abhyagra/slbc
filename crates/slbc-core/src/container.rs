@@ -189,7 +189,10 @@ pub fn parse_slbc(data: &[u8]) -> Result<(SlbcHeader, Vec<Chunk>), String> {
         pos += payload_len;
 
         let is_eof = chunk_type == CHUNK_EOF;
-        chunks.push(Chunk { chunk_type, payload });
+        chunks.push(Chunk {
+            chunk_type,
+            payload,
+        });
 
         if is_eof {
             break;

@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 
 use slbc::container;
@@ -106,17 +106,22 @@ fn main() -> Result<()> {
 
 // ── Encode ──
 
-fn cmd_encode(text: Option<String>, input: Option<PathBuf>, output: Option<PathBuf>, hex: bool) -> Result<()> {
+fn cmd_encode(
+    text: Option<String>,
+    input: Option<PathBuf>,
+    output: Option<PathBuf>,
+    hex: bool,
+) -> Result<()> {
     let iast = match (text, input) {
         (Some(t), _) => t,
-        (None, Some(path)) => fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?,
+        (None, Some(path)) => {
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?
+        }
         (None, None) => bail!("provide IAST text or -i <file>"),
     };
 
     let iast = iast.trim();
-    let phon_payload = encoder::encode_iast(iast)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let phon_payload = encoder::encode_iast(iast).map_err(|e| anyhow::anyhow!("{}", e))?;
     let slbc_data = container::build_slbc(&phon_payload);
 
     if hex {
@@ -126,8 +131,7 @@ fn cmd_encode(text: Option<String>, input: Option<PathBuf>, output: Option<PathB
 
     match output {
         Some(path) => {
-            fs::write(&path, &slbc_data)
-                .with_context(|| format!("writing {}", path.display()))?;
+            fs::write(&path, &slbc_data).with_context(|| format!("writing {}", path.display()))?;
             eprintln!("wrote {} bytes to {}", slbc_data.len(), path.display());
         }
         None => {
@@ -141,11 +145,9 @@ fn cmd_encode(text: Option<String>, input: Option<PathBuf>, output: Option<PathB
 // ── Decode ──
 
 fn cmd_decode(input: PathBuf, to: String, output: Option<PathBuf>) -> Result<()> {
-    let data = fs::read(&input)
-        .with_context(|| format!("reading {}", input.display()))?;
+    let data = fs::read(&input).with_context(|| format!("reading {}", input.display()))?;
 
-    let (_header, chunks) = container::parse_slbc(&data)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let (_header, chunks) = container::parse_slbc(&data).map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let script = match to.as_str() {
         "iast" => Script::Iast,
@@ -164,8 +166,7 @@ fn cmd_decode(input: PathBuf, to: String, output: Option<PathBuf>) -> Result<()>
 
     match output {
         Some(path) => {
-            fs::write(&path, &full_text)
-                .with_context(|| format!("writing {}", path.display()))?;
+            fs::write(&path, &full_text).with_context(|| format!("writing {}", path.display()))?;
             eprintln!("wrote {} chars to {}", full_text.len(), path.display());
         }
         None => {
@@ -178,7 +179,11 @@ fn cmd_decode(input: PathBuf, to: String, output: Option<PathBuf>) -> Result<()>
 
 // ── Inspect ──
 
-fn cmd_inspect(byte: Option<String>, from_hex: Option<String>, input: Option<PathBuf>) -> Result<()> {
+fn cmd_inspect(
+    byte: Option<String>,
+    from_hex: Option<String>,
+    input: Option<PathBuf>,
+) -> Result<()> {
     if let Some(byte_str) = byte {
         let b = parse_hex_byte(&byte_str)?;
         let info = inspect::inspect_byte(b);
@@ -187,8 +192,7 @@ fn cmd_inspect(byte: Option<String>, from_hex: Option<String>, input: Option<Pat
     }
 
     if let Some(hex_str) = from_hex {
-        let infos = inspect::inspect_hex_stream(&hex_str)
-            .map_err(|e| anyhow::anyhow!("{}", e))?;
+        let infos = inspect::inspect_hex_stream(&hex_str).map_err(|e| anyhow::anyhow!("{}", e))?;
         for (i, info) in infos.iter().enumerate() {
             if i > 0 {
                 println!("  ───");
@@ -199,16 +203,16 @@ fn cmd_inspect(byte: Option<String>, from_hex: Option<String>, input: Option<Pat
     }
 
     if let Some(path) = input {
-        let data = fs::read(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let data = fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
 
-        let (header, chunks) = container::parse_slbc(&data)
-            .map_err(|e| anyhow::anyhow!("{}", e))?;
+        let (header, chunks) =
+            container::parse_slbc(&data).map_err(|e| anyhow::anyhow!("{}", e))?;
 
         println!("=== SLBC Container ===");
-        println!("  Version: {}.{}.{}.{}",
-            header.version[0], header.version[1],
-            header.version[2], header.version[3]);
+        println!(
+            "  Version: {}.{}.{}.{}",
+            header.version[0], header.version[1], header.version[2], header.version[3]
+        );
         println!("  Flags:   0b{:08b} (0x{:02X})", header.flags, header.flags);
         println!("    HAS_LIPI:     {}", header.has_lipi());
         println!("    HAS_META:     {}", header.has_meta());
@@ -231,8 +235,13 @@ fn cmd_inspect(byte: Option<String>, from_hex: Option<String>, input: Option<Pat
                 CHUNK_EOF => "EOF",
                 _ => "???",
             };
-            println!("\n  Chunk {} — {} (0x{:02X}), {} bytes payload",
-                ci, type_name, chunk.chunk_type, chunk.payload.len());
+            println!(
+                "\n  Chunk {} — {} (0x{:02X}), {} bytes payload",
+                ci,
+                type_name,
+                chunk.chunk_type,
+                chunk.payload.len()
+            );
 
             if chunk.chunk_type == CHUNK_PHON && !chunk.payload.is_empty() {
                 println!("    Bytes:");
@@ -278,8 +287,10 @@ fn cmd_transform(op: String, byte_str: String, byte2_str: Option<String>) -> Res
     println!(
         "{}: {} (0x{:02X}) → {} (0x{:02X})",
         result.operation,
-        result.input_iast, result.input_byte,
-        result.output_iast, result.output_byte
+        result.input_iast,
+        result.input_byte,
+        result.output_iast,
+        result.output_byte
     );
 
     Ok(())
@@ -292,8 +303,7 @@ fn cmd_roundtrip(text: String) -> Result<()> {
     eprintln!("Input (IAST):  {}", input);
 
     // Encode
-    let phon_payload = encoder::encode_iast(input)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let phon_payload = encoder::encode_iast(input).map_err(|e| anyhow::anyhow!("{}", e))?;
     let slbc_data = container::build_slbc(&phon_payload);
 
     eprintln!("Encoded:       {} bytes (.slbc container)", slbc_data.len());
@@ -304,8 +314,7 @@ fn cmd_roundtrip(text: String) -> Result<()> {
     eprintln!();
 
     // Decode back to IAST
-    let (_, chunks) = container::parse_slbc(&slbc_data)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let (_, chunks) = container::parse_slbc(&slbc_data).map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let mut decoded = String::new();
     for chunk in &chunks {
@@ -345,8 +354,7 @@ fn cmd_roundtrip(text: String) -> Result<()> {
 
 fn parse_hex_byte(s: &str) -> Result<u8> {
     let s = s.trim().trim_start_matches("0x").trim_start_matches("0X");
-    u8::from_str_radix(s, 16)
-        .with_context(|| format!("invalid hex byte: '{}'", s))
+    u8::from_str_radix(s, 16).with_context(|| format!("invalid hex byte: '{}'", s))
 }
 
 fn print_hex(data: &[u8]) {
@@ -368,7 +376,11 @@ fn print_hex(data: &[u8]) {
         }
         print!(" |");
         for &b in chunk {
-            let c = if b >= 0x20 && b < 0x7F { b as char } else { '.' };
+            let c = if (0x20..0x7F).contains(&b) {
+                b as char
+            } else {
+                '.'
+            };
             print!("{}", c);
         }
         println!("|");

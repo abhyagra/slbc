@@ -3,8 +3,8 @@
 //! Parses IAST text into phoneme tokens, then emits SLBC byte stream
 //! wrapped in PADA/SPACE/DANDA boundaries.
 
-use crate::types::*;
 use crate::numeral;
+use crate::types::*;
 
 /// A token produced by the IAST tokenizer.
 #[derive(Debug, Clone, PartialEq)]
@@ -27,7 +27,11 @@ pub fn tokenize_iast(input: &str) -> Result<Vec<Token>, String> {
 
     while i < len {
         let ch = chars[i];
-        let next = if i + 1 < len { Some(chars[i + 1]) } else { None };
+        let next = if i + 1 < len {
+            Some(chars[i + 1])
+        } else {
+            None
+        };
 
         // Skip carriage returns
         if ch == '\r' {
@@ -288,10 +292,7 @@ mod tests {
     fn test_encode_dharma() {
         let bytes = encode_iast("dharma").unwrap();
         // PADA_START dh a r m a PADA_END
-        assert_eq!(
-            bytes,
-            vec![0x26, 0x1B, 0x40, 0x33, 0x24, 0x40, 0x2E]
-        );
+        assert_eq!(bytes, vec![0x26, 0x1B, 0x40, 0x33, 0x24, 0x40, 0x2E]);
     }
 
     #[test]

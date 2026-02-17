@@ -1,7 +1,7 @@
 //! Byte introspection — explains what any SLBC byte represents.
 
-use crate::types::*;
 use crate::decoder;
+use crate::types::*;
 
 /// Detailed description of an SLBC byte.
 #[derive(Debug)]
@@ -87,7 +87,10 @@ fn inspect_svara(b: u8, hex: String, binary: String) -> ByteInfo {
         hex,
         binary,
         class: "Svara".into(),
-        description: format!("svara '{}' ({}, {}, {}-series, {})", iast, q_str, a_str, s_str, g_str),
+        description: format!(
+            "svara '{}' ({}, {}, {}-series, {})",
+            iast, q_str, a_str, s_str, g_str
+        ),
         fields: vec![
             ("Q (quantity)".into(), format!("{:02b} = {}", q, q_str)),
             ("A (accent)".into(), format!("{:02b} = {}", a, a_str)),
@@ -202,8 +205,8 @@ pub fn inspect_hex_stream(hex_str: &str) -> Result<Vec<ByteInfo>, String> {
     let mut bytes = Vec::new();
     for token in hex_str.split_whitespace() {
         let token = token.trim_start_matches("0x").trim_start_matches("0X");
-        let b = u8::from_str_radix(token, 16)
-            .map_err(|_| format!("invalid hex byte: '{}'", token))?;
+        let b =
+            u8::from_str_radix(token, 16).map_err(|_| format!("invalid hex byte: '{}'", token))?;
         bytes.push(b);
     }
     Ok(bytes.iter().map(|&b| inspect_byte(b)).collect())
