@@ -1,5 +1,7 @@
 # Preamble
 
+[![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+
 ## On the Occasion of Mahāśivarātri 
 
 This draft of **Sanskrit Linguistic Binary Codec (SLBC)** is released for preview and comments on 15 February 2026.
@@ -114,6 +116,40 @@ SLBC is not trying to replace Devanāgarī (for reading), Unicode (for writing s
 
 ---
 
+## Quick Start
+
+```bash
+# Build
+cargo build --workspace
+
+# Round-trip test: IAST → SLBC → IAST + Devanāgarī
+cargo run -p slbc-cli -- roundtrip "dharmakṣetre kurukṣetre"
+# Output (IAST): dharmakṣetre kurukṣetre
+# Output (Deva): धर्मक्षेत्रे कुरुक्षेत्रे
+# ✓ Round-trip PASSED
+
+# Encode to file
+cargo run -p slbc-cli -- encode "oṃ namaḥ śivāya" -o test.slbc
+
+# Decode
+cargo run -p slbc-cli -- decode -i test.slbc --to iast
+cargo run -p slbc-cli -- decode -i test.slbc --to devanagari
+
+# Inspect a byte — see its phonological structure
+cargo run -p slbc-cli -- inspect --byte 0x00
+# Vyañjana 'ka' — kaṇṭhya (velar), aghoṣa alpaprāṇa
+
+# Inspect a byte stream
+cargo run -p slbc-cli -- inspect --from-hex "1B 40 33 24 40"
+
+# Algebraic transforms — Pāṇinian operations as bit manipulation
+cargo run -p slbc-cli -- transform --op guna 0x44       # i → e
+cargo run -p slbc-cli -- transform --op jastva 0x00      # ka → ga
+cargo run -p slbc-cli -- transform --op nasal 0x00       # ka → ṅa
+```
+
+---
+
 ## Scope of This Draft (v0.11)
 
 **Bhāṣā layer status: FROZEN.** All phonemic encoding — svaras, vyañjanas, bhāṣā control bytes — is fully specified with no open items. The byte-space classification (§2), vyañjana grid (§3), svara encoding (§4), algebraic operations (§5), and control bytes (§6) are stable. Remaining open items (TBD-2, TBD-6) are scoped entirely within the META envelope and registry layer — they do not affect any byte in the bhāṣā or lipi lanes.
@@ -151,6 +187,19 @@ The development of SLBC is organized into the following phases. Each phase build
 | **6** | **Community & Extensions** — Incorporate feature requests, expand registry coverage (dhātu, prātipadika, sandhi-rule registries), explore ML-assisted vyākaraṇa annotation, and broaden transliteration input support. | Ongoing | ⏳ Planned |
 
 > **Current milestone:** Phase 2 — MVP Codec in Rust (pāṭha mode)
+
+### Workspace Structure
+
+```
+├── crates/
+│   ├── slbc-core/     # Core library — encoding, decoding, transforms, container format
+│   ├── slbc-cli/      # CLI binary — encode, decode, inspect, transform, roundtrip
+│   ├── slbc-grpc/     # gRPC service (Phase 4 — planned)
+│   ├── slbc-rest/     # REST service (Phase 4 — planned)
+│   └── slbc-wasm/     # WASM module (Phase 5 — planned)
+├── SLBC_spec.md       # Full specification
+└── LICENSE            # Apache-2.0
+```
 
 ---
 
