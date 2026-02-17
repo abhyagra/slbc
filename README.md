@@ -1,6 +1,6 @@
 # Preamble
 
-[![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+[![CI](https://github.com/abhyagra/slbc/actions/workflows/ci.yml/badge.svg)](https://github.com/abhyagra/slbc/actions/workflows/ci.yml)
 
 ## On the Occasion of Mahāśivarātri 
 
