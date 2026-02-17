@@ -1,0 +1,23 @@
+{
+  "name": "rust-trixie-dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "dev",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  },
+  "mounts": [
+    "source=cargo-registry,target=/usr/local/cargo/registry,type=volume",
+    "source=cargo-git,target=/usr/local/cargo/git,type=volume"
+  ]
+}

@@ -1,0 +1,15 @@
+[package]
+name = "slbc-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "SLBC command-line interface — encode, decode, inspect, transform, roundtrip"
+
+[[bin]]
+name = "slbc"
+path = "src/main.rs"
+
+[dependencies]
+slbc = { package = "slbc-core", path = "../slbc-core" }
+clap = { workspace = true }
+anyhow = { workspace = true }

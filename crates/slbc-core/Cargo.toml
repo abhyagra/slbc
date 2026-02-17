@@ -1,0 +1,8 @@
+[package]
+name = "slbc-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "SLBC core library — phoneme encoding, decoding, algebraic transforms, container format"
+
+[dependencies]

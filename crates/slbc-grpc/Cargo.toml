@@ -1,0 +1,9 @@
+[package]
+name = "slbc-grpc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "SLBC gRPC streaming service (planned — Phase 4)"
+
+[dependencies]
+slbc-core = { workspace = true }

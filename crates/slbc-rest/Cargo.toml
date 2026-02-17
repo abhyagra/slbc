@@ -1,0 +1,9 @@
+[package]
+name = "slbc-rest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "SLBC REST API service (planned — Phase 4)"
+
+[dependencies]
+slbc-core = { workspace = true }
